@@ -51,3 +51,6 @@ app.use("/api/dashboard", dashboardRoutes);
 
 const adminRoutes = require("./routes/admin.routes");
 app.use("/api/admin", adminRoutes);
+
+const docenteRoutes = require("./routes/docente.routes");
+app.use("/api/docente", docenteRoutes);
