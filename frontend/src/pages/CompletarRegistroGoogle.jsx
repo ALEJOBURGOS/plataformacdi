@@ -43,7 +43,7 @@ export default function CompletarRegistroGoogle() {
       setLoading(false);
     }
   };
-  //hola
+  //holajhjbhj
   // Si alguien entra manualmente sin Google
   if (!correoInicial) {
     return (
