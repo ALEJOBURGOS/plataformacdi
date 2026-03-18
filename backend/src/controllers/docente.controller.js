@@ -96,11 +96,11 @@ exports.importarEstudiantes = async (req, res) => {
       return res.status(400).json({ message: "No se subió ningún archivo" });
     }
 
-    // Leer archivo Excel
-    const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+    // Leer archivo Excel configurando fechas
+    const workbook = XLSX.read(req.file.buffer, { type: "buffer", cellDates: true });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    const data = XLSX.utils.sheet_to_json(worksheet);
+    const data = XLSX.utils.sheet_to_json(worksheet, { raw: false, dateNF: "yyyy-mm-dd" });
 
     if (data.length === 0) {
       return res.status(400).json({ message: "El archivo está vacío" });
@@ -129,8 +129,25 @@ exports.importarEstudiantes = async (req, res) => {
         const nombreCompleto = row.nombres || row.nombre || "";
         const apellidoCompleto = row.apellidos || row.apellido || "";
         
-        if (!nombreCompleto || !row.fecha_nacimiento) {
-          resultados.errores.push(`Fila sin datos requeridos: ${JSON.stringify(row)}`);
+        // Manejar fecha de nacimiento (si Excel la convierte a numérico o Date, o dateNF de raw:false)
+        let fechaNacimiento = row.fecha_nacimiento;
+        
+        if (fechaNacimiento instanceof Date) {
+          fechaNacimiento = fechaNacimiento.toISOString().split('T')[0];
+        } else if (typeof fechaNacimiento === 'number') {
+          // Serial de Excel a JS Date
+          const unixTimestamp = (fechaNacimiento - 25569) * 86400 * 1000;
+          fechaNacimiento = new Date(unixTimestamp).toISOString().split('T')[0];
+        } else if (typeof fechaNacimiento === 'string' && fechaNacimiento.includes('/')) {
+           // Intento convertir DD/MM/YYYY a YYYY-MM-DD
+           const parts = fechaNacimiento.split('/');
+           if (parts.length === 3 && parts[0].length === 2 && parts[2].length === 4) {
+               fechaNacimiento = `${parts[2]}-${parts[1]}-${parts[0]}`;
+           }
+        }
+
+        if (!nombreCompleto || !fechaNacimiento) {
+          resultados.errores.push(`Fila sin datos requeridos: Nombres o Fecha de Nacimiento faltantes.`);
           continue;
         }
 
@@ -147,7 +164,7 @@ exports.importarEstudiantes = async (req, res) => {
           // Buscar por nombre y fecha de nacimiento
           existingNino = await pool.query(
             `SELECT id_nino FROM ninos WHERE nombres = $1 AND fecha_nacimiento = $2`,
-            [nombreCompleto, row.fecha_nacimiento]
+            [nombreCompleto, fechaNacimiento]
           );
         }
 
@@ -163,7 +180,7 @@ exports.importarEstudiantes = async (req, res) => {
             `INSERT INTO ninos (nombres, apellidos, fecha_nacimiento, documento, estado)
              VALUES ($1, $2, $3, $4, TRUE)
              RETURNING id_nino`,
-            [nombreCompleto, apellidoCompleto, row.fecha_nacimiento, row.documento || null]
+            [nombreCompleto, apellidoCompleto, fechaNacimiento, row.documento || null]
           );
           idNino = ninoResult.rows[0].id_nino;
           resultados.creados++;

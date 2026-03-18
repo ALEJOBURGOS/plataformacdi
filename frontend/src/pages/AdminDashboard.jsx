@@ -28,17 +28,25 @@ import ExcelImportModal from "../components/admin/ExcelImportModal";
 import AsignarGrupoModal from "../components/admin/AsignarGrupoModal";
 
 // StatCard Component
-const StatCard = ({ title, value, Icon, color, iconColor }) => (
-  <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 group cursor-default">
-    <div className="flex items-center justify-between">
-      <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl group-hover:scale-105 transition-transform">
-        <Icon className={`w-10 h-10 ${iconColor}`} />
+const StatCard = ({ title, value, Icon, color, iconColor, bgGlow }) => (
+  <div className="relative group bg-white p-7 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:shadow-[0_8px_40px_rgba(79,70,229,0.12)] transition-all duration-300 hover:-translate-y-1 overflow-hidden cursor-default">
+    {/* Decorative background glow */}
+    <div className={`absolute -right-10 -top-10 w-32 h-32 ${bgGlow} rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity duration-500`}></div>
+    
+    <div className="flex items-center justify-between relative z-10">
+      <div className={`p-3.5 rounded-2xl group-hover:scale-110 transition-transform duration-300 shadow-sm ${bgGlow.replace('bg-', 'bg-opacity-10 bg-')}`}>
+        <Icon className={`w-8 h-8 ${iconColor}`} />
       </div>
-      <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+      <div className="flex h-3 w-3 relative">
+         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+         <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+      </div>
     </div>
-    <div className="mt-6">
-      <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">{title}</p>
-      <p className={`text-3xl font-bold ${color} mt-1`}>{value}</p>
+    <div className="mt-5 relative z-10">
+      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{title}</p>
+      <div className="flex items-baseline gap-2 mt-1">
+         <p className={`text-4xl font-extrabold ${color} tracking-tight`}>{value}</p>
+      </div>
     </div>
   </div>
 );
@@ -277,28 +285,63 @@ export default function AdminDashboard() {
         <>
           {/* Vista Principal: Dashboard */}
           {activeView === "dashboard" && (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 px-6">
-                <StatCard title="Niños Activos" value={stats.totalNinos} Icon={AcademicCapIcon} color="text-blue-900" iconColor="text-blue-200" />
-                <StatCard title="Docentes" value={stats.totalDocentes} Icon={UserGroupIcon} color="text-indigo-900" iconColor="text-indigo-200" />
-                <StatCard title="Usuarios Totales" value={stats.totalUsuarios} Icon={UsersIcon} color="text-slate-900" iconColor="text-slate-300" />
+            <div className="animate-fade-in">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <StatCard 
+                  title="Niños Activos" 
+                  value={stats.totalNinos} 
+                  Icon={AcademicCapIcon} 
+                  color="text-indigo-900" 
+                  iconColor="text-indigo-600" 
+                  bgGlow="bg-indigo-400" 
+                />
+                <StatCard 
+                  title="Docentes" 
+                  value={stats.totalDocentes} 
+                  Icon={UserGroupIcon} 
+                  color="text-blue-900" 
+                  iconColor="text-blue-600" 
+                  bgGlow="bg-blue-400" 
+                />
+                <StatCard 
+                  title="Usuarios Totales" 
+                  value={stats.totalUsuarios} 
+                  Icon={UsersIcon} 
+                  color="text-purple-900" 
+                  iconColor="text-purple-600" 
+                  bgGlow="bg-purple-400" 
+                />
               </div>
 
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mx-6 mb-6">
-                <h3 className="text-lg font-semibold text-gray-700 mb-6">Resumen General</h3>
+              <div className="bg-white p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 mb-6">
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-indigo-900">Resumen General</h3>
+                    <p className="text-sm text-slate-500 mt-1">Distribución de usuarios en la plataforma</p>
+                  </div>
+                </div>
                 <div className="w-full h-80">
                   <ResponsiveContainer>
-                    <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="cantidad" fill="#1e3a8a" radius={[8, 8, 0, 0]} />
+                    <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                      <defs>
+                        <linearGradient id="colorCantidad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#6366f1" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#6366f1" stopOpacity={0.2}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} dy={10} />
+                      <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b'}} dx={-10} />
+                      <Tooltip 
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                        cursor={{fill: '#f8fafc'}}
+                      />
+                      <Bar dataKey="cantidad" fill="url(#colorCantidad)" radius={[6, 6, 0, 0]} maxBarSize={60} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
-            </>
+            </div>
           )}
 
           {/* Vista Principal: Reportes */}
@@ -306,33 +349,38 @@ export default function AdminDashboard() {
 
           {/* Vista de Gestión */}
           {activeView === "gestion" && (
-            <>
+            <div className="animate-fade-in">
               {gestionLoading ? (
-                <div className="max-w-7xl mx-auto py-12 px-6 flex items-center justify-center min-h-[400px]">
+                <div className="w-full py-20 flex items-center justify-center min-h-[400px]">
                   <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-6"></div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Cargando Gestión...</h3>
-                    <p className="text-gray-500">Obteniendo docentes y grupos</p>
+                    <div className="relative w-20 h-20 mx-auto mb-6">
+                      <div className="absolute inset-0 rounded-full border-t-2 border-indigo-500 animate-spin"></div>
+                      <div className="absolute inset-2 rounded-full border-r-2 border-blue-400 animate-spin shadow-[0_0_15px_rgba(79,70,229,0.5)]" style={{animationDirection: 'reverse'}}></div>
+                    </div>
+                    <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-indigo-900 mb-2">Cargando Gestión...</h3>
+                    <p className="text-slate-500">Obteniendo docentes y grupos</p>
                   </div>
                 </div>
               ) : gestionError ? (
-                <div className="max-w-7xl mx-auto py-12 px-6">
-                  <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center max-w-2xl mx-auto">
-                    <svg className="mx-auto h-16 w-16 text-red-400 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <h3 className="text-xl font-semibold text-red-900 mb-2">{gestionError}</h3>
-                    <p className="text-red-700 mb-6">Intenta recargando la página o verifica el servidor backend.</p>
+                <div className="w-full py-12">
+                  <div className="bg-red-50/50 backdrop-blur-sm border border-red-200/60 rounded-3xl p-10 text-center max-w-2xl mx-auto shadow-sm">
+                    <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <svg className="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-bold text-red-900 mb-2">{gestionError}</h3>
+                    <p className="text-red-600/80 mb-8">Intenta recargando la página o verifica la conexión con el servidor backend.</p>
                     <button
                       onClick={() => window.location.reload()}
-                      className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-xl transition"
+                      className="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg active:scale-95"
                     >
                       Recargar
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="max-w-7xl mx-auto py-12 px-6">
+                <div className="w-full">
                   {gestionSubView === "cards" && (
                     <GestionCards
                       onCreateDocente={() => setGestionSubView("createDocente")}
@@ -411,7 +459,7 @@ export default function AdminDashboard() {
                 asignando={asignandoGrupo}
                 error={grupoError}
               />
-            </>
+            </div>
           )}
         </>
       )}
